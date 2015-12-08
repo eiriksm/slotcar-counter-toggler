@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+        <style>
+          #btn {
+            width: 80%;
+            background: lightblue;
+            display: block;;
+            height: 30%;
+            text-transform: uppercase;
+            margin: auto;
+          }
+        </style>
+    </head>
+    <body>
+      <button id="btn">Start</button>
+      <script>
+        var socket = io();
+        var going = false;
+        var btn = document.querySelector('#btn');
+        btn.addEventListener('click', function() {
+          !going ? socket.emit('start') : socket.emit('stop');
+        });
+        socket.on('started', function() {
+          btn.innerHTML = 'Stop';
+          going = true;
+        });
+        socket.on('end', function() {
+          btn.innerHTML = 'Start';
+          going = false;
+        })
+      </script>
+    </body>
+</html>
