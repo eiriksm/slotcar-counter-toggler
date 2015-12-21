@@ -15,12 +15,18 @@
     </head>
     <body>
       <button id="btn">Start</button>
+      <input type="text" id="name" />
+      <button id="name-btn">Update name</button>
       <script>
         var socket = io();
         var going = false;
         var btn = document.querySelector('#btn');
+        var btn2 = document.querySelector('#name-btn');
         btn.addEventListener('click', function() {
           !going ? socket.emit('start') : socket.emit('stop');
+        });
+        btn2.addEventListener('click', function() {
+          socket.emit('name', document.querySelector('#name').value);
         });
         socket.on('started', function() {
           btn.innerHTML = 'Stop';
