@@ -23,6 +23,24 @@ app.get('/', function(req, res){
 var name = 'player 1';
 
 function init() {
+  var startTime = null;
+  var running = false;
+  var totalSpeed = 0;
+  function stopThisStuff() {
+    if (!running) {
+      return;
+    }
+    if (Date.now() < startTime + 2000) {
+      return;
+    }
+    var score = Math.floor((Date.now() - startTime) + totalSpeed);
+    totalSpeed = 0;
+    logger('Stop received. Score:', score);
+    io.emit('end', score);
+    sp.write(new Buffer([0x01]));
+    running = false;
+  }
+  
   io.on('connection', function(socket) {
     socket.emit('name', name);
     socket.currentScore = 0;
@@ -30,23 +48,18 @@ function init() {
     socket.on('disconnect', function(){
       logger('Client disconnected');
     });
-    socket.on('start', function(msg){
+    socket.on('start', function() {
       logger('Start received');
       io.emit('countdown');
       setTimeout(function() {
+        running = true;
         logger('Toggle power');
-        socket.startTime = Date.now()
+        startTime = Date.now()
         sp.write(new Buffer([0x01]));
         io.emit('started');
       }, 3000);
     });
-    socket.on('stop', function() {
-      var score = Math.floor((Date.now() - socket.startTime) * Math.PI);
-      logger('Stop received. Score:', score);
-      io.emit('end', score);
-      socket.startTime = null;
-      sp.write(new Buffer([0x01]));
-    });
+    socket.on('stop', stopThisStuff);
     socket.on('name', function(d) {
       logger('New name', d);
       name = d;
@@ -59,7 +72,17 @@ function init() {
   sp.on('open', function () {
     logger('Serialport opened');
     sp.on('data', function(d) {
-      io.emit('speed', d.toString())
+      if (parseInt(d) > 50) {
+        //console.log(d)
+        io.emit('speed', d.toString());
+      }
+      totalSpeed += parseInt(d, 10);
+      if (parseInt(d) === 0) {
+        stopThisStuff();
+      }
+      if (parseInt(d) > 940) {
+        stopThisStuff();
+      }
     });
   });
 }

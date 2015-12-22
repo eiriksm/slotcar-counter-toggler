@@ -3,25 +3,120 @@
     <head>
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
         <style>
+          *, *:before, *:after {
+              box-sizing: inherit;
+          }
+          button {
+            display: inline-block;
+            text-align: center;
+            line-height: 1;
+            cursor: pointer;
+            -webkit-appearance: none;
+            transition: all 0.25s ease-out;
+            vertical-align: middle;
+            border: 1px solid transparent;
+            border-radius: 0;
+            padding: 0.85em 1em;
+            margin: 0 0 1rem 0;
+            font-size: 0.9rem;
+            background: #2199e8;
+            color: #fff;
+          }
           #btn {
-            width: 80%;
-            background: lightblue;
-            display: block;;
-            height: 30%;
-            text-transform: uppercase;
-            margin: auto;
+            width: 75%;
+            position: fixed;
+            left: 46%;
+            margin-left: -37.5%;
+            font-size: 3em;
+            top: 26%;
+          }
+          #name-btn {
+            
+          }
+          .input-group-button {
+            height: 100%;
+            padding-top: 0;
+            padding-bottom: 0;
+            text-align: center;
+            width: 1%;
+            display: table-cell;
+            margin: 0;
+            vertical-align: middle;
+          }
+          .input-group {
+            display: table;
+            width: 100%;
+            margin-bottom: 1rem;
+          }
+          .input-group.bottom {
+            position: fixed;
+            bottom: 0px;
+          }
+          input {
+            display: block;
+            box-sizing: border-box;
+            width: 100%;
+            height: 2.4375rem;
+            padding: 0.5rem;
+            border: 1px solid #cacaca;
+            font-family: inherit;
+            font-size: 1rem;
+            color: #0a0a0a;
+            background-color: #fefefe;
+            box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.1);
+            border-radius: 0;
+            transition: box-shadow 0.5s, border-color 0.25s ease-in-out;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            border-radius: 0;
+            height: 2.5rem;
+            display: table-cell;
+            margin: 0;
+            vertical-align: middle;
+          }
+          #cd, #score {
+            position: absolute;
+            margin: 0 auto;
+            width: 100%;
+            text-align: center;
+            top: 20%;
+            font-size: 3em;
+          }
+          #cd {
+            font-size: 15em;
+          }
+          #score {
+            display: none;
+          }
+          #sp {
+            font-size: 2em;
+          }
+          body, button {
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            font-family: 'Press Start 2P', cursive;
           }
         </style>
     </head>
     <body>
       <button id="btn">Start</button>
-      <input type="text" id="name" />
-      <button id="name-btn">Update name</button>
+      <div class="input-group bottom">
+        <input type="text" id="name" />
+        <div class="input-group-button">
+          <button id="name-btn">Update</button>
+        </div>
+      </div>
+      <div id="cd"></div>
+      <div id="sp"></div>
+      <div id="score"></div>
       <script>
         var socket = io();
         var going = false;
         var btn = document.querySelector('#btn');
         var btn2 = document.querySelector('#name-btn');
+        var cd = document.querySelector('#cd');
+        var sp = document.querySelector('#sp');
+        var score = document.querySelector('#score');
         btn.addEventListener('click', function() {
           !going ? socket.emit('start') : socket.emit('stop');
         });
@@ -29,13 +124,41 @@
           socket.emit('name', document.querySelector('#name').value);
         });
         socket.on('started', function() {
-          btn.innerHTML = 'Stop';
           going = true;
         });
-        socket.on('end', function() {
-          btn.innerHTML = 'Start';
+        socket.on('countdown', function() {
+          btn.style.display = 'none';
+          var time = 3;
+          cd.innerHTML = time;
+      		function timeDown() {
+      			time--;
+      			cd.innerHTML = time;
+      			if (time === 0) {
+              cd.innerHTML = '';
+      				return;
+      			}
+      			setTimeout(timeDown, 1000)
+      		}
+      		setTimeout(timeDown, 1000);
+        });
+        socket.on('speed', function(s) {
+          sp.innerHTML = 'Speed: ' + s;
+        })
+        socket.on('end', function(d) {
           going = false;
+          sp.innerHTML = '';
+          score.innerHTML = 'Score: ' + d;
+          score.style.display = 'block';
+          sp.style.display = 'none';
+          // Display the total score for a while.
+          setTimeout(function() {
+            sp.innerHTML = '';
+            sp.style.display = 'block';
+            btn.style.display = 'block';
+            score.style.display = 'none';
+          }, 5000);
         })
       </script>
+      <link href='https://fonts.googleapis.com/css?family=Press+Start+2P' rel='stylesheet' type='text/css'>
     </body>
 </html>
