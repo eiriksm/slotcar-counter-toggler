@@ -71,17 +71,37 @@ function init() {
   });
   sp.on('open', function () {
     logger('Serialport opened');
+    var counter = 0;
+    var valid = 0;
+    var totalInterval = 0;
     sp.on('data', function(d) {
-      if (parseInt(d) > 50) {
-        //console.log(d)
-        io.emit('speed', d.toString());
+      counter++;
+      var sendSpeed = false;
+      var number = parseInt(d);
+      var speed = 0;
+      if (number > 600 || number < 50) {
+        // Ignoring this. If we ignore 10 in a row, we will stop this thing.
       }
-      totalSpeed += parseInt(d, 10);
-      if (parseInt(d) === 0) {
-        stopThisStuff();
+      else {
+        totalInterval = totalInterval + number;
+        valid++;
       }
-      if (parseInt(d) > 940) {
-        stopThisStuff();
+      if (counter === 10) {
+        speed = parseInt(totalInterval / valid, 10);
+        sendSpeed = true;
+        counter = 0;
+        valid = 0;
+        totalInterval = 0;
+      }
+      
+      if (sendSpeed) {
+        // Find out the speed. An average of the valid measures.        
+        if (!speed) {
+          stopThisStuff();
+        }
+        else {
+          io.emit('speed', speed);
+        }
       }
     });
   });
