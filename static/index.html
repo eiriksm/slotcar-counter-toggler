@@ -4,7 +4,7 @@
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
         <style>
           *, *:before, *:after {
-              box-sizing: inherit;
+            box-sizing: inherit;
           }
           button {
             display: inline-block;
@@ -31,7 +31,7 @@
             top: 26%;
           }
           #name-btn {
-            
+
           }
           .input-group-button {
             height: 100%;
@@ -132,14 +132,14 @@
           cd.innerHTML = time;
       		function timeDown() {
       			time--;
-      			cd.innerHTML = time;
-      			if (time === 0) {
+            cd.innerHTML = time;
+            if (time === 0) {
               cd.innerHTML = '';
       				return;
       			}
       			setTimeout(timeDown, 1000)
       		}
-      		setTimeout(timeDown, 1000);
+          setTimeout(timeDown, 1000);
         });
         socket.on('speed', function(s) {
           sp.innerHTML = 'Speed: ' + s;

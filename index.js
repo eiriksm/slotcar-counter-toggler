@@ -2,13 +2,23 @@
 var path = require('path');
 var serialport = require('serialport');
 var SerialPort = serialport.SerialPort;
+// Used to determine if we are running a dry-run, so we don't actually use the
+// serialport.
+var pluggedIn = false;
+
 var sp = new SerialPort('/dev/tty.usbmodem1411', {
   baudrate: 9600,
   parser: serialport.parsers.readline("\n")
-});
+}, pluggedIn);
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+
+function writeSp() {
+  if (pluggedIn) {
+    sp.write(new Buffer([0x01]));
+  }
+}
 
 function logger() {
   var args = Array.prototype.slice.call(arguments);
@@ -17,7 +27,7 @@ function logger() {
 }
 
 app.get('/', function(req, res){
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'static', 'index.html'));
 });
 
 var name = 'player 1';
@@ -37,10 +47,10 @@ function init() {
     totalSpeed = 0;
     logger('Stop received. Score:', score);
     io.emit('end', score);
-    sp.write(new Buffer([0x01]));
+    writeSp()
     running = false;
   }
-  
+
   io.on('connection', function(socket) {
     socket.emit('name', name);
     socket.currentScore = 0;
@@ -55,7 +65,7 @@ function init() {
         running = true;
         logger('Toggle power');
         startTime = Date.now()
-        sp.write(new Buffer([0x01]));
+        writeSp();
         io.emit('started');
       }, 3000);
     });
@@ -63,7 +73,8 @@ function init() {
     socket.on('name', function(d) {
       logger('New name', d);
       name = d;
-    })
+      io.emit('name', name);
+    });
   });
 
   http.listen(3000, function(){
@@ -93,9 +104,9 @@ function init() {
         valid = 0;
         totalInterval = 0;
       }
-      
+
       if (sendSpeed) {
-        // Find out the speed. An average of the valid measures.        
+        // Find out the speed. An average of the valid measures.
         if (!speed) {
           stopThisStuff();
         }
