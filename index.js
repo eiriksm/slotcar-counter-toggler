@@ -157,7 +157,6 @@ function init() {
       endTime: Date.now(),
       startTime: startTime,
       totalTime: Date.now() - startTime,
-      laps: laps,
       maxLaps: maxLaps
     }) + "\n");
     writeSp()
